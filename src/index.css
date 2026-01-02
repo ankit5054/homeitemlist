@@ -1,0 +1,223 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Thin dark scrollbar for Webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a202c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Thin scrollbar for Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #1a202c;
+}
+
+/* Responsive styles */
+.app-container {
+  padding: 30px;
+  display: flex;
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.main-panel {
+  width: 70%;
+  background-color: #2d3748;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  overflow-y: auto;
+  max-height: calc(100vh - 60px);
+}
+
+.side-panel {
+  width: 30%;
+  background-color: #2d3748;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+}
+
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-navbar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .app-container {
+    padding: 15px;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .main-panel {
+    width: 100%;
+    padding: 25px;
+    max-height: none;
+  }
+  
+  .side-panel {
+    width: 100%;
+    padding: 25px;
+    max-height: 400px;
+    margin-bottom: 200px;
+  }
+  
+  .item-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .item-card > div {
+    padding: 30px !important;
+  }
+  
+  .item-card h4 {
+    font-size: 48px !important;
+  }
+  
+  .item-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  
+  .item-controls label {
+    font-size: 48px !important;
+    font-weight: 600 !important;
+  }
+  
+  .item-controls select {
+    flex: 1;
+    padding: 24px 28px !important;
+    font-size: 48px !important;
+  }
+  
+  .item-controls span {
+    padding: 24px 28px !important;
+    font-size: 48px !important;
+  }
+  
+  .main-panel input[type="text"] {
+    padding: 24px 28px !important;
+    font-size: 48px !important;
+  }
+  
+  .item-card input[type="checkbox"] {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .main-panel h2 {
+    font-size: 50px !important;
+  }
+  
+  .add-more-button {
+    font-size: 44px !important;
+    padding: 20px 40px !important;
+  }
+  
+  .main-panel select {
+    font-size: 32px !important;
+    padding: 16px 20px !important;
+  }
+  
+  .mobile-navbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #2d3748;
+    padding: 20px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    justify-content: center;
+  }
+  
+  .scroll-button {
+    background: #38a169;
+    color: white;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 44px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+    min-height: 80px;
+    min-width: 300px;
+    margin: 20px;
+  }
+  
+  .main-panel {
+    padding-bottom: 120px;
+  }
+  
+  .side-panel h3 {
+    font-size: 48px !important;
+  }
+  
+  .side-panel button {
+    font-size: 48px !important;
+    padding: 24px 28px !important;
+  }
+  
+  .side-panel > div > div {
+    font-size: 48px !important;
+    padding: 24px !important;
+  }
+  
+  .side-panel div[style*="fontWeight: '600'"] {
+    font-size: 48px !important;
+  }
+  
+  .side-panel div {
+    font-size: 48px !important;
+  }
+  
+  .selected-only-view .side-panel {
+    max-height: none !important;
+    margin-bottom: 120px !important;
+  }
+}
