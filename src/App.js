@@ -3,14 +3,14 @@ import items from './items-translated.json';
 import SearchBar from './components/SearchBar';
 import ItemCard from './components/ItemCard';
 import SelectedItems from './components/SelectedItems';
-import { generatePDF, getQuantityOptions, filterItems } from './utils/helpers';
+import { generatePDF, getQuantityOptions, filterItems, shareList } from './utils/helpers';
 import { translations } from './translations';
 
 function App() {
   const [selections, setSelections] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('hi');
 
   const handleItemSelect = (itemName, isSelected) => {
     if (isSelected) {
@@ -54,6 +54,10 @@ function App() {
     generatePDF(selections, items, language);
   };
 
+  const handleShare = () => {
+    shareList(selections, items, language);
+  };
+
   const handleClearAll = () => {
     setSelections({});
   };
@@ -95,21 +99,22 @@ function App() {
                 fontSize: '28px', 
                 fontWeight: '700'
               }}>{t.itemSelector}</h2>
-              <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value)}
+              <button 
+                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
                 style={{
                   padding: '8px 12px',
                   backgroundColor: '#4a5568',
                   color: '#f7fafc',
                   border: 'none',
                   borderRadius: '6px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  minWidth: '80px',
+                  fontWeight: '600'
                 }}
               >
-                <option value="en">English</option>
-                <option value="hi">हिंदी</option>
-              </select>
+                {language === 'en' ? 'हिंदी' : 'English'}
+              </button>
             </div>
             
             <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} placeholder={t.searchPlaceholder} />

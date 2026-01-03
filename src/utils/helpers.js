@@ -38,7 +38,7 @@ export const generatePDF = (selections, items, language = 'en') => {
     </html>
   `;
   
-  // Create and download HTML file (which can be printed to PDF)
+  // Create and download HTML file
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -46,23 +46,66 @@ export const generatePDF = (selections, items, language = 'en') => {
   a.download = `list-${today}.html`;
   a.click();
   URL.revokeObjectURL(url);
-  
-  // Show instruction to user
-  setTimeout(() => {
-    alert('HTML file downloaded. Open it and use Ctrl+P to print as PDF for Hindi support.');
-  }, 100);
 };
 
 export const getQuantityOptions = (unit) => {
   const isGrams = unit === 'g';
-  const step = isGrams ? 50 : 1;
-  const max = isGrams ? 1000 : 20;
+  const isKg = unit === 'kg' || unit === 'Kg';
+  
+  let step, max;
+  
+  if (isGrams) {
+    step = 50;
+    max = 1000;
+  } else if (isKg) {
+    step = 0.5;
+    max = 10;
+  } else {
+    step = 1;
+    max = 20;
+  }
+  
   const options = [];
   
   for (let i = step; i <= max; i += step) {
     options.push(<option key={i} value={i}>{i}</option>);
   }
   return options;
+};
+
+export const shareList = (selections, items, language = 'en') => {
+  const selectedItems = Object.entries(selections).filter(([itemName, sel]) => {
+    const item = items.find(i => i.item.en === itemName);
+    return sel.selected && sel.quantity && (sel.unit || item?.unit[0].en);
+  });
+  
+  if (selectedItems.length === 0) {
+    alert('No items selected to share');
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const listText = selectedItems.map(([itemName, sel]) => {
+    const item = items.find(i => i.item.en === itemName);
+    const effectiveUnit = sel.unit || item?.unit[0].en;
+    const itemDisplay = item?.item[language] || itemName;
+    const unitDisplay = item?.unit.find(u => u.en === effectiveUnit)?.[language] || effectiveUnit;
+    return `${itemDisplay} - ${sel.quantity} ${unitDisplay}`;
+  }).join('\n');
+  
+  const shareText = `Shopping List (${today}):\n\n${listText}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Shopping List',
+      text: shareText
+    }).catch((error) => {
+      console.log('Error sharing:', error);
+      alert('Unable to share. Please copy manually:\n\n' + shareText);
+    });
+  } else {
+    alert('Please copy your shopping list:\n\n' + shareText);
+  }
 };
 
 export const filterItems = (items, searchTerm, language = 'en') => {

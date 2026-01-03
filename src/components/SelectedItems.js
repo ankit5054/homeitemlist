@@ -35,17 +35,32 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
             fontWeight: '600',
             boxShadow: '0 4px 12px rgba(56, 161, 105, 0.4)',
             transition: 'all 0.2s ease',
-            marginRight: '10px'
+            marginRight: '10px',
+            WebkitTapHighlightColor: 'transparent'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#2f855a';
-            e.target.style.transform = 'translateY(-1px)';
-            e.target.style.boxShadow = '0 6px 16px rgba(56, 161, 105, 0.5)';
+            if (!('ontouchstart' in window)) {
+              e.target.style.backgroundColor = '#2f855a';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 16px rgba(56, 161, 105, 0.5)';
+            }
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#38a169';
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 12px rgba(56, 161, 105, 0.4)';
+            if (!('ontouchstart' in window)) {
+              e.target.style.backgroundColor = '#38a169';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(56, 161, 105, 0.4)';
+            }
+          }}
+          onTouchStart={(e) => {
+            e.target.style.backgroundColor = '#2f855a';
+            e.target.style.transform = 'scale(0.98)';
+          }}
+          onTouchEnd={(e) => {
+            setTimeout(() => {
+              e.target.style.backgroundColor = '#38a169';
+              e.target.style.transform = 'scale(1)';
+            }, 100);
           }}
         >
           {translations?.download || '📥 Download'}
@@ -62,17 +77,32 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
             fontSize: '14px',
             fontWeight: '600',
             boxShadow: '0 4px 12px rgba(229, 62, 62, 0.4)',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            WebkitTapHighlightColor: 'transparent'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#c53030';
-            e.target.style.transform = 'translateY(-1px)';
-            e.target.style.boxShadow = '0 6px 16px rgba(229, 62, 62, 0.5)';
+            if (!('ontouchstart' in window)) {
+              e.target.style.backgroundColor = '#c53030';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 16px rgba(229, 62, 62, 0.5)';
+            }
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = '#e53e3e';
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 12px rgba(229, 62, 62, 0.4)';
+            if (!('ontouchstart' in window)) {
+              e.target.style.backgroundColor = '#e53e3e';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(229, 62, 62, 0.4)';
+            }
+          }}
+          onTouchStart={(e) => {
+            e.target.style.backgroundColor = '#c53030';
+            e.target.style.transform = 'scale(0.98)';
+          }}
+          onTouchEnd={(e) => {
+            setTimeout(() => {
+              e.target.style.backgroundColor = '#e53e3e';
+              e.target.style.transform = 'scale(1)';
+            }, 100);
           }}
         >
           {translations?.clearAll || '🗑️ Clear All'}
@@ -96,12 +126,16 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#2d3748';
-                e.target.style.borderColor = '#718096';
+                if (!('ontouchstart' in window)) {
+                  e.currentTarget.style.backgroundColor = '#2d3748';
+                  e.currentTarget.style.borderColor = '#718096';
+                }
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#1a202c';
-                e.target.style.borderColor = '#4a5568';
+                if (!('ontouchstart' in window)) {
+                  e.currentTarget.style.backgroundColor = '#1a202c';
+                  e.currentTarget.style.borderColor = '#4a5568';
+                }
               }}
             >
               <div style={{ 
