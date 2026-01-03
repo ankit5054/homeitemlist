@@ -26,21 +26,18 @@
   {
     "item": "Jeera",
     "unit": [
-      "Kg",
       "g"
     ]
   },
   {
     "item": "Misri",
     "unit": [
-      "Kg",
       "g"
     ]
   },
   {
     "item": "Tata Tea Premium",
     "unit": [
-      "kg",
       "g"
     ]
   },
@@ -93,30 +90,26 @@
     ]
   },
   {
-    "item": "Soya bean Badi",
+    "item": "Soyabean",
     "unit": [
-      "Kg",
-      "g"
+      "Kg"
     ]
   },
   {
     "item": "Dhaniya Powder",
     "unit": [
-      "Kg",
       "g"
     ]
   },
   {
     "item": "Kaju",
     "unit": [
-      "Kg",
       "g"
     ]
   },
   {
     "item": "Makhana",
     "unit": [
-      "Kg",
       "g"
     ]
   },
@@ -165,7 +158,6 @@
   {
     "item": "Haldi",
     "unit": [
-      "Kg",
       "g"
     ]
   },
@@ -196,8 +188,7 @@
   {
     "item": "Suji",
     "unit": [
-      "Kg",
-      "g"
+      "Kg"
     ]
   },
   {
@@ -221,8 +212,7 @@
   {
     "item": "Chhuhada",
     "unit": [
-      "Kg",
-      "g"
+      "Kg"
     ]
   },
   {
@@ -252,7 +242,6 @@
   {
     "item": "Gola",
     "unit": [
-      "Kg",
       "g"
     ]
   },
