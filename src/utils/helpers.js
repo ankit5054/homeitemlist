@@ -1,5 +1,4 @@
 import React from 'react';
-import jsPDF from 'jspdf';
 
 export const generatePDF = (selections, items, language = 'en') => {
   const selectedItems = Object.entries(selections).filter(([itemName, sel]) => {
@@ -8,44 +7,44 @@ export const generatePDF = (selections, items, language = 'en') => {
   });
   
   if (selectedItems.length === 0) {
-    alert('No items selected to download');
+    alert('No items selected to email');
     return;
   }
 
   const today = new Date().toISOString().split('T')[0];
   
-  // Create HTML content
-  const htmlContent = `
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .date { font-size: 12px; margin-bottom: 20px; }
-          .item { margin-bottom: 8px; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="date">Date: ${today}</div>
-        ${selectedItems.map(([itemName, sel]) => {
-          const item = items.find(i => i.item.en === itemName);
-          const effectiveUnit = sel.unit || item?.unit[0].en;
-          const itemDisplay = item?.item[language] || itemName;
-          const unitDisplay = item?.unit.find(u => u.en === effectiveUnit)?.[language] || effectiveUnit;
-          return `<div class="item">${itemDisplay} - ${sel.quantity} ${unitDisplay}</div>`;
-        }).join('')}
-      </body>
-    </html>
-  `;
+  // Create email content
+  const emailContent = selectedItems.map(([itemName, sel]) => {
+    const item = items.find(i => i.item.en === itemName);
+    const effectiveUnit = sel.unit || item?.unit[0].en;
+    const itemDisplay = item?.item[language] || itemName;
+    const unitDisplay = item?.unit.find(u => u.en === effectiveUnit)?.[language] || effectiveUnit;
+    return `${itemDisplay} - ${sel.quantity} ${unitDisplay}`;
+  }).join('\n');
   
-  // Create and download HTML file
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `list-${today}.html`;
-  a.click();
-  URL.revokeObjectURL(url);
+  // Send email using Web3Forms
+  const formData = new FormData();
+  formData.append('access_key', process.env.REACT_APP_WEB3FORMS_KEY);
+  formData.append('email', 'ankit.mishra9780@gmail.com');
+  formData.append('subject', `Shopping List - ${today}`);
+  formData.append('message', `${emailContent}`);
+  
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Shopping list emailed successfully!');
+    } else {
+      throw new Error('Email failed');
+    }
+  })
+  .catch((error) => {
+    console.error('Email error:', error);
+    alert('Failed to send email. Please try again.');
+  });
 };
 
 export const getQuantityOptions = (unit) => {

@@ -1,16 +1,47 @@
-import React, { useState } from 'react';
-import items from './items-translated.json';
+import React, { useState, useEffect } from 'react';
 import SearchBar from './components/SearchBar';
 import ItemCard from './components/ItemCard';
 import SelectedItems from './components/SelectedItems';
 import { generatePDF, getQuantityOptions, filterItems, shareList } from './utils/helpers';
 import { translations } from './translations';
 
+// Fallback data
+import fallbackItems from './items-translated.json';
+
 function App() {
+  const [items, setItems] = useState(fallbackItems);
   const [selections, setSelections] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [language, setLanguage] = useState('hi');
+
+  // Load items from Google Sheets
+  useEffect(() => {
+    const SHEET_ID = process.env.REACT_APP_SHEET_ID;
+    
+    // Use CSV export URL (no API key needed)
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+    
+    fetch(url)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.split('\n').slice(1); // Skip header
+        const sheetItems = rows.filter(row => row.trim()).map(row => {
+          const [en, hi, unit] = row.split(',').map(cell => cell.replace(/"/g, '').trim());
+          return {
+            item: { en: en || '', hi: hi || en || '' },
+            unit: [{
+              en: unit || 'pc',
+              hi: unit === 'kg' ? 'किलो' : unit === 'g' ? 'ग्राम' : unit === 'L' ? 'लीटर' : unit === 'pkt' ? 'पैकेट' : 'पीस'
+            }]
+          };
+        });
+        if (sheetItems.length > 0) setItems(sheetItems);
+      })
+      .catch(error => {
+        console.log('Using fallback data:', error);
+      });
+  }, []);
 
   const handleItemSelect = (itemName, isSelected) => {
     if (isSelected) {

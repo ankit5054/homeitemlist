@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "homepage": "https://mygrocery.iamankit.in",
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "gh-pages": "^6.1.1",
     "jspdf": "^3.0.4",
     "react": "^18.2.0",
