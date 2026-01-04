@@ -5,11 +5,8 @@ import SelectedItems from './components/SelectedItems';
 import { generatePDF, getQuantityOptions, filterItems, shareList } from './utils/helpers';
 import { translations } from './translations';
 
-// Fallback data
-import fallbackItems from './items-translated.json';
-
 function App() {
-  const [items, setItems] = useState(fallbackItems);
+  const [items, setItems] = useState([]);
   const [selections, setSelections] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -28,18 +25,39 @@ function App() {
         const rows = csvText.split('\n').slice(1); // Skip header
         const sheetItems = rows.filter(row => row.trim()).map(row => {
           const [en, hi, unit] = row.split(',').map(cell => cell.replace(/"/g, '').trim());
+          
+          // Better unit translation mapping
+          const getHindiUnit = (englishUnit) => {
+            const unitMap = {
+              'kg': 'किलो',
+              'Kg': 'किलो', 
+              'g': 'ग्राम',
+              'L': 'लीटर',
+              'pkt': 'पैकेट',
+              'Pc': 'पीस',
+              'pc': 'पीस',
+              'set': 'सेट'
+            };
+            return unitMap[englishUnit] || 'पीस';
+          };
+          
           return {
             item: { en: en || '', hi: hi || en || '' },
             unit: [{
               en: unit || 'pc',
-              hi: unit === 'kg' ? 'किलो' : unit === 'g' ? 'ग्राम' : unit === 'L' ? 'लीटर' : unit === 'pkt' ? 'पैकेट' : 'पीस'
+              hi: getHindiUnit(unit || 'pc')
             }]
           };
         });
         if (sheetItems.length > 0) setItems(sheetItems);
       })
       .catch(error => {
-        console.log('Using fallback data:', error);
+        console.log('Failed to load from Google Sheets:', error);
+        // Show message to user if no data loads
+        setItems([{
+          item: { en: 'No items available', hi: 'कोई आइटम उपलब्ध नहीं' },
+          unit: [{ en: 'pc', hi: 'पीस' }]
+        }]);
       });
   }, []);
 
@@ -65,7 +83,7 @@ function App() {
         ...prev[itemName],
         selected: true,
         unit,
-        quantity: unit === 'g' ? 50 : 1
+        quantity: prev[itemName]?.quantity || (unit === 'g' ? 50 : unit === 'kg' || unit === 'Kg' ? 0.5 : 1)
       }
     }));
   };
