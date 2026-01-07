@@ -1,13 +1,18 @@
 import React from 'react';
 
-export const generatePDF = (selections, items, language = 'en') => {
+export const generatePDF = async (selections, items, language = 'en', setModal, t) => {
   const selectedItems = Object.entries(selections).filter(([itemName, sel]) => {
     const item = items.find(i => i.item.en === itemName);
     return sel.selected && sel.quantity && (sel.unit || item?.unit[0].en);
   });
   
   if (selectedItems.length === 0) {
-    alert('No items selected to email');
+    setModal({
+      isOpen: true,
+      title: t.noItemsSelectedTitle,
+      message: t.noItemsSelectedMessage,
+      type: 'error'
+    });
     return;
   }
 
@@ -29,21 +34,31 @@ export const generatePDF = (selections, items, language = 'en') => {
   formData.append('subject', `Shopping List - ${today}`);
   formData.append('message', `${emailContent}`);
   
-  fetch('https://api.web3forms.com/submit', {
+  return fetch('https://api.web3forms.com/submit', {
     method: 'POST',
     body: formData
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('Shopping list emailed successfully!');
+      setModal({
+        isOpen: true,
+        title: t.emailSuccessTitle,
+        message: t.emailSuccessMessage,
+        type: 'success'
+      });
     } else {
       throw new Error('Email failed');
     }
   })
   .catch((error) => {
     console.error('Email error:', error);
-    alert('Failed to send email. Please try again.');
+    setModal({
+      isOpen: true,
+      title: t.emailFailedTitle,
+      message: t.emailFailedMessage,
+      type: 'error'
+    });
   });
 };
 

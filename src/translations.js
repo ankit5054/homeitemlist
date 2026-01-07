@@ -12,7 +12,15 @@ export const translations = {
     unit: "Unit:",
     language: "Language:",
     selectQuantity: "Select Quantity",
-    clearAll: "🗑️ Clear All"
+    clearAll: "🗑️ Clear All",
+    noItemsSelectedTitle: "No Items Selected",
+    noItemsSelectedMessage: "Please select some items before sending the email.",
+    emailSuccessTitle: "Email Sent Successfully!",
+    emailSuccessMessage: "Your shopping list has been emailed successfully.",
+    emailFailedTitle: "Email Failed",
+    emailFailedMessage: "Failed to send email. Please try again.",
+    ok: "OK",
+    sending: "Sending Email..."
   },
   hi: {
     itemSelector: "🛒 आइटम चयनकर्ता",
@@ -27,6 +35,14 @@ export const translations = {
     unit: "इकाई:",
     language: "भाषा:",
     selectQuantity: "मात्रा चुनें",
-    clearAll: "🗑️ सभी हटाएं"
+    clearAll: "🗑️ सभी हटाएं",
+    noItemsSelectedTitle: "कोई आइटम नहीं चुना गया",
+    noItemsSelectedMessage: "कृपया ईमेल भेजने से पहले कुछ आइटम चुनें।",
+    emailSuccessTitle: "ईमेल सफलतापूर्वक भेजा गया!",
+    emailSuccessMessage: "आपकी शॉपिंग लिस्ट सफलतापूर्वक ईमेल की गई है।",
+    emailFailedTitle: "ईमेल भेजना असफल",
+    emailFailedMessage: "ईमेल भेजने में असफल। कृपया पुनः प्रयास करें।",
+    ok: "ठीक है",
+    sending: "ईमेल भेजा जा रहा है..."
   }
 };

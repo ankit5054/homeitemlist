@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SearchBar from './components/SearchBar';
 import ItemCard from './components/ItemCard';
 import SelectedItems from './components/SelectedItems';
+import Modal from './components/Modal';
 import { generatePDF, getQuantityOptions, filterItems, shareList } from './utils/helpers';
 import { translations } from './translations';
 
@@ -11,6 +12,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [language, setLanguage] = useState('hi');
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
   // Load items from Google Sheets
   useEffect(() => {
@@ -99,8 +102,13 @@ function App() {
     }));
   };
 
-  const handleDownload = () => {
-    generatePDF(selections, items, language);
+  const handleDownload = async () => {
+    setIsEmailLoading(true);
+    try {
+      await generatePDF(selections, items, language, setModal, t);
+    } finally {
+      setIsEmailLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -134,6 +142,35 @@ function App() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       <div className={`app-container ${showSelectedOnly ? 'selected-only-view' : ''}`}>
+        {isEmailLoading && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            color: '#f7fafc',
+            fontSize: window.innerWidth <= 1024 ? '48px' : '18px',
+            fontWeight: '600'
+          }}>
+            <div style={{
+              width: window.innerWidth <= 1024 ? '80px' : '40px',
+              height: window.innerWidth <= 1024 ? '80px' : '40px',
+              border: `${window.innerWidth <= 1024 ? '8px' : '4px'} solid #4a5568`,
+              borderTop: `${window.innerWidth <= 1024 ? '8px' : '4px'} solid #f7fafc`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              marginBottom: window.innerWidth <= 1024 ? '40px' : '20px'
+            }} />
+            {t.sending}
+          </div>
+        )}
         {!showSelectedOnly && (
           <div className="main-panel">
             <div style={{ 
@@ -159,10 +196,31 @@ function App() {
                   fontSize: '14px',
                   cursor: 'pointer',
                   minWidth: '80px',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  marginRight: '10px'
                 }}
               >
                 {language === 'en' ? 'हिंदी' : 'English'}
+              </button>
+              <button 
+                onClick={() => setModal({
+                  isOpen: true,
+                  title: t.emailSuccessTitle,
+                  message: t.emailSuccessMessage,
+                  type: 'success'
+                })}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#38a169',
+                  color: '#f7fafc',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Test Modal
               </button>
             </div>
             
@@ -196,6 +254,7 @@ function App() {
             showToggleButton={true}
             translations={t}
             language={language}
+            isEmailLoading={isEmailLoading}
           />
         )}
         
@@ -234,6 +293,7 @@ function App() {
               showToggleButton={false}
               translations={t}
               language={language}
+              isEmailLoading={isEmailLoading}
             />
           </div>
         )}
@@ -244,6 +304,15 @@ function App() {
           </button>
         </div>
       </div>
+      
+      <Modal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        translations={t}
+      />
     </div>
   );
 }

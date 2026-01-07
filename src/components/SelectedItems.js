@@ -1,6 +1,21 @@
 import React from 'react';
 
-const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView, showToggleButton, translations, language = 'en' }) => {
+// Add CSS for spinner animation
+const spinnerStyle = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
+
+// Inject CSS into document head
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = spinnerStyle;
+  document.head.appendChild(style);
+}
+
+const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView, showToggleButton, translations, language = 'en', isEmailLoading = false }) => {
   const selectedItems = Object.entries(selections).filter(([itemName, sel]) => {
     const item = items.find(i => i.item.en === itemName);
     return sel.selected && sel.quantity && (sel.unit || item?.unit[0].en);
@@ -24,46 +39,64 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
         }}>{translations?.selectedItems || '📋 Selected Items'}</h3>
         <button 
           onClick={onDownload}
+          disabled={isEmailLoading}
           style={{
             padding: '10px 20px',
-            backgroundColor: '#38a169',
+            backgroundColor: isEmailLoading ? '#718096' : '#38a169',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            cursor: 'pointer',
+            cursor: isEmailLoading ? 'not-allowed' : 'pointer',
             fontSize: '14px',
             fontWeight: '600',
             boxShadow: '0 4px 12px rgba(56, 161, 105, 0.4)',
             transition: 'all 0.2s ease',
             marginRight: '10px',
-            WebkitTapHighlightColor: 'transparent'
+            WebkitTapHighlightColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
           onMouseEnter={(e) => {
-            if (!('ontouchstart' in window)) {
+            if (!('ontouchstart' in window) && !isEmailLoading) {
               e.target.style.backgroundColor = '#2f855a';
               e.target.style.transform = 'translateY(-1px)';
               e.target.style.boxShadow = '0 6px 16px rgba(56, 161, 105, 0.5)';
             }
           }}
           onMouseLeave={(e) => {
-            if (!('ontouchstart' in window)) {
+            if (!('ontouchstart' in window) && !isEmailLoading) {
               e.target.style.backgroundColor = '#38a169';
               e.target.style.transform = 'translateY(0)';
               e.target.style.boxShadow = '0 4px 12px rgba(56, 161, 105, 0.4)';
             }
           }}
           onTouchStart={(e) => {
-            e.target.style.backgroundColor = '#2f855a';
-            e.target.style.transform = 'scale(0.98)';
+            if (!isEmailLoading) {
+              e.target.style.backgroundColor = '#2f855a';
+              e.target.style.transform = 'scale(0.98)';
+            }
           }}
           onTouchEnd={(e) => {
-            setTimeout(() => {
-              e.target.style.backgroundColor = '#38a169';
-              e.target.style.transform = 'scale(1)';
-            }, 100);
+            if (!isEmailLoading) {
+              setTimeout(() => {
+                e.target.style.backgroundColor = '#38a169';
+                e.target.style.transform = 'scale(1)';
+              }, 100);
+            }
           }}
         >
-          {translations?.download || '📥 Download'}
+          {isEmailLoading && (
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid #ffffff',
+              borderTop: '2px solid transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+          )}
+          {isEmailLoading ? 'Sending...' : (translations?.download || '📥 Download')}
         </button>
         <button 
           onClick={onClearAll}
