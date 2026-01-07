@@ -180,6 +180,16 @@ body {
     border-radius: 8px !important;
   }
   
+  /* Language toggle button in selected items view */
+  .language-toggle {
+    font-size: 48px !important;
+    padding: 24px 28px !important;
+    min-height: 88px !important;
+    min-width: 200px !important;
+    border: 3px solid #63b3ed !important;
+    border-radius: 8px !important;
+  }
+  
   .mobile-navbar {
     display: flex;
     position: fixed;

@@ -13,6 +13,7 @@ function App() {
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [language, setLanguage] = useState('hi');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isClearLoading, setIsClearLoading] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
   // Load items from Google Sheets
@@ -103,12 +104,21 @@ function App() {
   };
 
   const handleDownload = async () => {
-    setIsEmailLoading(true);
-    try {
-      await generatePDF(selections, items, language, setModal, t);
-    } finally {
-      setIsEmailLoading(false);
-    }
+    setModal({
+      isOpen: true,
+      title: t.emailConfirmTitle,
+      message: t.emailConfirmMessage,
+      type: 'confirm',
+      onConfirm: async () => {
+        setModal({ ...modal, isOpen: false });
+        setIsEmailLoading(true);
+        try {
+          await generatePDF(selections, items, language, setModal, t);
+        } finally {
+          setIsEmailLoading(false);
+        }
+      }
+    });
   };
 
   const handleShare = () => {
@@ -116,7 +126,25 @@ function App() {
   };
 
   const handleClearAll = () => {
-    setSelections({});
+    if (window.innerWidth <= 1024) {
+      setModal({
+        isOpen: true,
+        title: t.clearAllConfirmTitle,
+        message: t.clearAllConfirmMessage,
+        type: 'confirm',
+        onConfirm: () => {
+          setModal({ ...modal, isOpen: false });
+          setIsClearLoading(true);
+          setTimeout(() => {
+            setSelections({});
+            setIsClearLoading(false);
+            setShowSelectedOnly(false);
+          }, 2000);
+        }
+      });
+    } else {
+      setSelections({});
+    }
   };
 
   const scrollToSelectedItems = () => {
@@ -142,7 +170,7 @@ function App() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       <div className={`app-container ${showSelectedOnly ? 'selected-only-view' : ''}`}>
-        {isEmailLoading && (
+        {(isEmailLoading || isClearLoading) && (
           <div style={{
             position: 'fixed',
             top: 0,
@@ -168,7 +196,7 @@ function App() {
               animation: 'spin 1s linear infinite',
               marginBottom: window.innerWidth <= 1024 ? '40px' : '20px'
             }} />
-            {t.sending}
+            {isEmailLoading ? t.sending : t.clearing}
           </div>
         )}
         {!showSelectedOnly && (
@@ -196,31 +224,10 @@ function App() {
                   fontSize: '14px',
                   cursor: 'pointer',
                   minWidth: '80px',
-                  fontWeight: '600',
-                  marginRight: '10px'
-                }}
-              >
-                {language === 'en' ? 'हिंदी' : 'English'}
-              </button>
-              <button 
-                onClick={() => setModal({
-                  isOpen: true,
-                  title: t.emailSuccessTitle,
-                  message: t.emailSuccessMessage,
-                  type: 'success'
-                })}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#38a169',
-                  color: '#f7fafc',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
                   fontWeight: '600'
                 }}
               >
-                Test Modal
+                {language === 'en' ? 'हिंदी' : 'English'}
               </button>
             </div>
             
@@ -255,6 +262,8 @@ function App() {
             translations={t}
             language={language}
             isEmailLoading={isEmailLoading}
+            onQuantityChange={handleQuantityChange}
+            getQuantityOptions={getQuantityOptions}
           />
         )}
         
@@ -283,6 +292,23 @@ function App() {
               >
                 {t.addMoreItems}
               </button>
+              <button 
+                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+                className="language-toggle"
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#4a5568',
+                  color: '#f7fafc',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  minWidth: '80px',
+                  fontWeight: '600'
+                }}
+              >
+                {language === 'en' ? 'हिंदी' : 'English'}
+              </button>
             </div>
             <SelectedItems 
               selections={selections}
@@ -294,6 +320,8 @@ function App() {
               translations={t}
               language={language}
               isEmailLoading={isEmailLoading}
+              onQuantityChange={handleQuantityChange}
+              getQuantityOptions={getQuantityOptions}
             />
           </div>
         )}
@@ -312,6 +340,7 @@ function App() {
         message={modal.message}
         type={modal.type}
         translations={t}
+        onConfirm={modal.onConfirm}
       />
     </div>
   );

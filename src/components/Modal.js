@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-const Modal = ({ isOpen, onClose, title, message, type = 'info', translations }) => {
+const Modal = ({ isOpen, onClose, title, message, type = 'info', translations, onConfirm }) => {
   const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || type === 'confirm') return;
     
     setCountdown(10);
     const timer = setInterval(() => {
@@ -18,7 +18,7 @@ const Modal = ({ isOpen, onClose, title, message, type = 'info', translations })
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, type]);
   if (!isOpen) return null;
 
   const getColor = () => {
@@ -65,22 +65,63 @@ const Modal = ({ isOpen, onClose, title, message, type = 'info', translations })
           lineHeight: '1.6',
           textAlign: 'center'
         }}>{message}</p>
-        <button
-          onClick={onClose}
-          style={{
-            padding: window.innerWidth <= 1024 ? '24px 28px' : '12px 24px',
-            backgroundColor: getColor(),
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: window.innerWidth <= 1024 ? '60px' : '28px',
-            fontWeight: '600',
+        {type === 'confirm' ? (
+          <div style={{
+            display: 'flex',
+            gap: '12px',
             width: '100%'
-          }}
-        >
-          {translations?.ok || 'OK'} ({countdown})
-        </button>
+          }}>
+            <button
+              onClick={onConfirm}
+              style={{
+                padding: window.innerWidth <= 1024 ? '24px 28px' : '12px 24px',
+                backgroundColor: '#e53e3e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: window.innerWidth <= 1024 ? '60px' : '28px',
+                fontWeight: '600',
+                flex: 1
+              }}
+            >
+              {translations?.yes || 'Yes'}
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                padding: window.innerWidth <= 1024 ? '24px 28px' : '12px 24px',
+                backgroundColor: '#4a5568',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: window.innerWidth <= 1024 ? '60px' : '28px',
+                fontWeight: '600',
+                flex: 1
+              }}
+            >
+              {translations?.no || 'No'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onClose}
+            style={{
+              padding: window.innerWidth <= 1024 ? '24px 28px' : '12px 24px',
+              backgroundColor: getColor(),
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: window.innerWidth <= 1024 ? '60px' : '28px',
+              fontWeight: '600',
+              width: '100%'
+            }}
+          >
+            {translations?.ok || 'OK'} ({countdown})
+          </button>
+        )}
       </div>
     </div>
   );

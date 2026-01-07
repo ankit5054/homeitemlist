@@ -13,6 +13,11 @@ export const translations = {
     language: "Language:",
     selectQuantity: "Select Quantity",
     clearAll: "🗑️ Clear All",
+    clearAllConfirmTitle: "Clear All Items?",
+    clearAllConfirmMessage: "Are you sure you want to clear all selected items?",
+    emailConfirmTitle: "Send Email?",
+    emailConfirmMessage: "Are you sure you want to send the shopping list via email?",
+    clearing: "Clearing...",
     noItemsSelectedTitle: "No Items Selected",
     noItemsSelectedMessage: "Please select some items before sending the email.",
     emailSuccessTitle: "Email Sent Successfully!",
@@ -20,6 +25,8 @@ export const translations = {
     emailFailedTitle: "Email Failed",
     emailFailedMessage: "Failed to send email. Please try again.",
     ok: "OK",
+    yes: "Yes",
+    no: "No",
     sending: "Sending Email..."
   },
   hi: {
@@ -36,6 +43,11 @@ export const translations = {
     language: "भाषा:",
     selectQuantity: "मात्रा चुनें",
     clearAll: "🗑️ सभी हटाएं",
+    clearAllConfirmTitle: "सभी आइटम हटाएं?",
+    clearAllConfirmMessage: "क्या आप वाकई सभी चयनित आइटम हटाना चाहते हैं?",
+    emailConfirmTitle: "ईमेल भेजें?",
+    emailConfirmMessage: "क्या आप वाकई शॉपिंग लिस्ट ईमेल के जरिए भेजना चाहते हैं?",
+    clearing: "हटाया जा रहा है...",
     noItemsSelectedTitle: "कोई आइटम नहीं चुना गया",
     noItemsSelectedMessage: "कृपया ईमेल भेजने से पहले कुछ आइटम चुनें।",
     emailSuccessTitle: "ईमेल सफलतापूर्वक भेजा गया!",
@@ -43,6 +55,8 @@ export const translations = {
     emailFailedTitle: "ईमेल भेजना असफल",
     emailFailedMessage: "ईमेल भेजने में असफल। कृपया पुनः प्रयास करें।",
     ok: "ठीक है",
+    yes: "हाँ",
+    no: "नहीं",
     sending: "ईमेल भेजा जा रहा है..."
   }
 };
