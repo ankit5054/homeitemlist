@@ -15,7 +15,7 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(style);
 }
 
-const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView, showToggleButton, translations, language = 'en', isEmailLoading = false, onQuantityChange, getQuantityOptions }) => {
+const SelectedItems = ({ selections, items, onDownload, onClearAll, onDeleteItem, onToggleView, showToggleButton, translations, language = 'en', isEmailLoading = false, onQuantityChange, getQuantityOptions }) => {
   const selectedItems = Object.entries(selections).filter(([itemName, sel]) => {
     const item = items.find(i => i.item.en === itemName);
     return sel.selected && sel.quantity && (sel.unit || item?.unit[0].en);
@@ -41,7 +41,7 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
           flex: '1 1 100%',
           textAlign: 'center',
           marginBottom: '15px'
-        }}>{translations?.selectedItems || '📋 Selected Items'}</h3>
+        }}>{translations?.selectedItems || '📋 Selected Items'} ({selectedItems.length})</h3>
         <div style={{
           display: 'flex',
           gap: '10px',
@@ -187,8 +187,39 @@ const SelectedItems = ({ selections, items, onDownload, onClearAll, onToggleView
                 fontWeight: '600', 
                 color: '#f7fafc', 
                 marginBottom: '8px',
-                fontSize: window.innerWidth <= 1024 ? '48px' : '15px'
-              }}>{item?.item[language] || itemName}</div>
+                fontSize: window.innerWidth <= 1024 ? '48px' : '15px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>{item?.item[language] || itemName}</span>
+                <button
+                  onClick={() => onDeleteItem(itemName)}
+                  style={{
+                    backgroundColor: '#e53e3e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: window.innerWidth <= 1024 ? '16px 20px' : '6px 10px',
+                    cursor: 'pointer',
+                    fontSize: window.innerWidth <= 1024 ? '36px' : '12px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!('ontouchstart' in window)) {
+                      e.target.style.backgroundColor = '#c53030';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!('ontouchstart' in window)) {
+                      e.target.style.backgroundColor = '#e53e3e';
+                    }
+                  }}
+                >
+                  🗑️
+                </button>
+              </div>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',

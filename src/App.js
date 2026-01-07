@@ -125,6 +125,14 @@ function App() {
     shareList(selections, items, language);
   };
 
+  const handleDeleteItem = (itemName) => {
+    setSelections(prev => {
+      const newSelections = { ...prev };
+      delete newSelections[itemName];
+      return newSelections;
+    });
+  };
+
   const handleClearAll = () => {
     if (window.innerWidth <= 1024) {
       setModal({
@@ -257,6 +265,7 @@ function App() {
             items={items}
             onDownload={handleDownload}
             onClearAll={handleClearAll}
+            onDeleteItem={handleDeleteItem}
             onToggleView={toggleView}
             showToggleButton={true}
             translations={t}
@@ -315,6 +324,7 @@ function App() {
               items={items}
               onDownload={handleDownload}
               onClearAll={handleClearAll}
+              onDeleteItem={handleDeleteItem}
               onToggleView={toggleView}
               showToggleButton={false}
               translations={t}
