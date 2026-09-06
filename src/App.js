@@ -89,7 +89,7 @@ function App() {
 
   return <div className={`app-shell ${showSelectedOnly ? 'selected-only-view' : ''}`}>
     {isEmailLoading && <div className="loading-overlay"><div><div className="spinner" />{t.sending}</div></div>}
-    <nav className="top-navigation"><div className="top-brand"><span className="brand-mark" aria-hidden="true">⌂</span><strong>HomeList</strong></div><div className="top-actions"><span className="today-label">Your everyday shopping companion</span><button className="language-toggle" onClick={() => setLanguage(value => value === 'en' ? 'hi' : 'en')}>{language === 'en' ? 'हिंदी' : 'English'}</button></div></nav>
+    <nav className="top-navigation"><div className="top-brand"><span className="brand-mark" aria-hidden="true">⌂</span><strong>HomeList</strong></div><div className="top-actions"><span className="today-label">Your everyday shopping companion</span><a className="admin-link" href="/admin" target="_blank" rel="noopener noreferrer">Admin</a><button className="language-toggle" onClick={() => setLanguage(value => value === 'en' ? 'hi' : 'en')}>{language === 'en' ? 'हिंदी' : 'English'}</button></div></nav>
     <div className="app-container">
       <main className="main-panel">
         <header className="app-header"><div className="header-copy"><p className="eyebrow">Everyday essentials</p><h1>{language === 'hi' ? 'आज आपको क्या चाहिए?' : 'What do you need today?'}</h1><p className="subtitle">{language === 'hi' ? 'अपनी सूची बनाने के लिए कोई आइटम चुनें।' : 'Choose an item to build your shopping list.'}</p></div><div className="selection-stat"><strong>{selectedCount}</strong><span>selected</span></div></header>
