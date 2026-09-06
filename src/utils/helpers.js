@@ -26,20 +26,40 @@ export const generatePDF = async (selections, items, language = 'en', setModal, 
     const unitDisplay = item?.unit.find(u => u.en === effectiveUnit)?.[language] || effectiveUnit;
     return `${itemDisplay} - ${sel.quantity} ${unitDisplay}`;
   }).join('\n');
+
+  const recipient = process.env.REACT_APP_EMAIL_RECIPIENT || 'ankit.mishra9780@gmail.com';
+  const subject = `Shopping List - ${today}`;
+  const web3FormsKey = process.env.REACT_APP_WEB3FORMS_KEY?.trim();
+
+  // Keep email usable in this browser-only app even when Web3Forms is not configured.
+  // On phones this opens the installed mail app with the list already filled in.
+  if (!web3FormsKey || web3FormsKey === 'your_web3forms_key') {
+    const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailContent)}`;
+    window.location.assign(mailtoUrl);
+    setModal({
+      isOpen: true,
+      title: t.emailDraftTitle,
+      message: t.emailDraftMessage,
+      type: 'success'
+    });
+    return;
+  }
   
   // Send email using Web3Forms
   const formData = new FormData();
-  formData.append('access_key', process.env.REACT_APP_WEB3FORMS_KEY);
-  formData.append('email', 'ankit.mishra9780@gmail.com');
-  formData.append('subject', `Shopping List - ${today}`);
-  formData.append('message', `${emailContent}`);
+  formData.append('access_key', web3FormsKey);
+  formData.append('email', recipient);
+  formData.append('from_name', 'HomeList');
+  formData.append('subject', subject);
+  formData.append('message', emailContent);
   
-  return fetch('https://api.web3forms.com/submit', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
+  try {
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await response.json();
+
     if (data.success) {
       setModal({
         isOpen: true,
@@ -48,10 +68,9 @@ export const generatePDF = async (selections, items, language = 'en', setModal, 
         type: 'success'
       });
     } else {
-      throw new Error('Email failed');
+      throw new Error(data.message || `Email request failed (${response.status})`);
     }
-  })
-  .catch((error) => {
+  } catch (error) {
     console.error('Email error:', error);
     setModal({
       isOpen: true,
@@ -59,7 +78,7 @@ export const generatePDF = async (selections, items, language = 'en', setModal, 
       message: t.emailFailedMessage,
       type: 'error'
     });
-  });
+  }
 };
 
 export const getQuantityOptions = (unit) => {

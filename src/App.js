@@ -1,359 +1,106 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import SearchBar from './components/SearchBar';
 import ItemCard from './components/ItemCard';
 import SelectedItems from './components/SelectedItems';
 import Modal from './components/Modal';
-import { generatePDF, getQuantityOptions, filterItems, shareList } from './utils/helpers';
+import AdminDashboard from './components/AdminDashboard';
+import { generatePDF, getQuantityOptions, filterItems } from './utils/helpers';
 import { translations } from './translations';
+import { applySheetMutation, connectGoogleSheets, disconnectGoogleSheets, isGoogleSheetsConfigured, readItemsFromSheet } from './utils/googleSheetsClient';
+
+const unitNames = { kg: 'किलो', g: 'ग्राम', L: 'लीटर', pkt: 'पैकेट', pc: 'पीस' };
+const fallbackItems = [
+  ['Rice', 'चावल', 'kg'], ['Wheat flour', 'गेहूं का आटा', 'kg'], ['Lentils', 'दाल', 'kg'],
+  ['Sugar', 'चीनी', 'kg'], ['Salt', 'नमक', 'kg'], ['Cooking oil', 'खाना पकाने का तेल', 'L'],
+  ['Milk', 'दूध', 'L'], ['Tea', 'चाय', 'g'], ['Coffee', 'कॉफी', 'g'],
+  ['Potatoes', 'आलू', 'kg'], ['Onions', 'प्याज', 'kg'], ['Tomatoes', 'टमाटर', 'kg'],
+  ['Eggs', 'अंडे', 'pc'], ['Bread', 'ब्रेड', 'pkt'], ['Soap', 'साबुन', 'pc']
+].map(([en, hi, unit]) => ({ item: { en, hi }, unit: [{ en: unit, hi: unitNames[unit] }] }));
+
+const initialRoute = () => {
+  const redirected = sessionStorage.getItem('homelist-route');
+  if (redirected) { sessionStorage.removeItem('homelist-route'); window.history.replaceState({}, '', redirected); }
+  return window.location.pathname === '/admin' ? 'admin' : 'shop';
+};
 
 function App() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(fallbackItems);
   const [selections, setSelections] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [language, setLanguage] = useState('hi');
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [isClearLoading, setIsClearLoading] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
-
-  // Load items from Google Sheets
-  useEffect(() => {
-    const SHEET_ID = process.env.REACT_APP_SHEET_ID;
-    
-    // Use CSV export URL (no API key needed)
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-    
-    fetch(url)
-      .then(response => response.text())
-      .then(csvText => {
-        const rows = csvText.split('\n').slice(1); // Skip header
-        const sheetItems = rows.filter(row => row.trim()).map(row => {
-          const [en, hi, unit] = row.split(',').map(cell => cell.replace(/"/g, '').trim());
-          
-          // Better unit translation mapping
-          const getHindiUnit = (englishUnit) => {
-            const unitMap = {
-              'kg': 'किलो',
-              'Kg': 'किलो', 
-              'g': 'ग्राम',
-              'L': 'लीटर',
-              'pkt': 'पैकेट',
-              'Pc': 'पीस',
-              'pc': 'पीस',
-              'set': 'सेट'
-            };
-            return unitMap[englishUnit] || 'पीस';
-          };
-          
-          return {
-            item: { en: en || '', hi: hi || en || '' },
-            unit: [{
-              en: unit || 'pc',
-              hi: getHindiUnit(unit || 'pc')
-            }]
-          };
-        });
-        if (sheetItems.length > 0) setItems(sheetItems);
-      })
-      .catch(error => {
-        console.log('Failed to load from Google Sheets:', error);
-        // Show message to user if no data loads
-        setItems([{
-          item: { en: 'No items available', hi: 'कोई आइटम उपलब्ध नहीं' },
-          unit: [{ en: 'pc', hi: 'पीस' }]
-        }]);
-      });
-  }, []);
-
-  const handleItemSelect = (itemName, isSelected) => {
-    if (isSelected) {
-      setSelections(prev => ({
-        ...prev,
-        [itemName]: { selected: true }
-      }));
-    } else {
-      setSelections(prev => {
-        const newSelections = { ...prev };
-        delete newSelections[itemName];
-        return newSelections;
-      });
-    }
-  };
-
-  const handleUnitChange = (itemName, unit) => {
-    setSelections(prev => ({
-      ...prev,
-      [itemName]: {
-        ...prev[itemName],
-        selected: true,
-        unit,
-        quantity: prev[itemName]?.quantity || (unit === 'g' ? 50 : unit === 'kg' || unit === 'Kg' ? 0.5 : 1)
-      }
-    }));
-  };
-
-  const handleQuantityChange = (itemName, quantity) => {
-    setSelections(prev => ({
-      ...prev,
-      [itemName]: {
-        ...prev[itemName],
-        selected: true,
-        quantity
-      }
-    }));
-  };
-
-  const handleDownload = async () => {
-    setModal({
-      isOpen: true,
-      title: t.emailConfirmTitle,
-      message: t.emailConfirmMessage,
-      type: 'confirm',
-      onConfirm: async () => {
-        setModal({ ...modal, isOpen: false });
-        setIsEmailLoading(true);
-        try {
-          await generatePDF(selections, items, language, setModal, t);
-        } finally {
-          setIsEmailLoading(false);
-        }
-      }
-    });
-  };
-
-  const handleShare = () => {
-    shareList(selections, items, language);
-  };
-
-  const handleDeleteItem = (itemName) => {
-    setSelections(prev => {
-      const newSelections = { ...prev };
-      delete newSelections[itemName];
-      return newSelections;
-    });
-  };
-
-  const handleClearAll = () => {
-    if (window.innerWidth <= 1024) {
-      setModal({
-        isOpen: true,
-        title: t.clearAllConfirmTitle,
-        message: t.clearAllConfirmMessage,
-        type: 'confirm',
-        onConfirm: () => {
-          setModal({ ...modal, isOpen: false });
-          setIsClearLoading(true);
-          setTimeout(() => {
-            setSelections({});
-            setIsClearLoading(false);
-            setShowSelectedOnly(false);
-          }, 2000);
-        }
-      });
-    } else {
-      setSelections({});
-    }
-  };
-
-  const scrollToSelectedItems = () => {
-    const selectedItemsElement = document.getElementById('selected-items');
-    if (selectedItemsElement) {
-      selectedItemsElement.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const toggleView = () => {
-    setShowSelectedOnly(!showSelectedOnly);
-    // Scroll to top when toggling views
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const filteredItems = filterItems(items, searchTerm, language);
+  const [view, setView] = useState(initialRoute);
+  const [sheetConnected, setSheetConnected] = useState(false);
   const t = translations[language];
 
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div className={`app-container ${showSelectedOnly ? 'selected-only-view' : ''}`}>
-        {(isEmailLoading || isClearLoading) && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            color: '#f7fafc',
-            fontSize: window.innerWidth <= 1024 ? '48px' : '18px',
-            fontWeight: '600'
-          }}>
-            <div style={{
-              width: window.innerWidth <= 1024 ? '80px' : '40px',
-              height: window.innerWidth <= 1024 ? '80px' : '40px',
-              border: `${window.innerWidth <= 1024 ? '8px' : '4px'} solid #4a5568`,
-              borderTop: `${window.innerWidth <= 1024 ? '8px' : '4px'} solid #f7fafc`,
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              marginBottom: window.innerWidth <= 1024 ? '40px' : '20px'
-            }} />
-            {isEmailLoading ? t.sending : t.clearing}
-          </div>
-        )}
-        {!showSelectedOnly && (
-          <div className="main-panel">
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: '30px' 
-            }}>
-              <h2 style={{ 
-                margin: 0, 
-                color: '#f7fafc', 
-                fontSize: '28px', 
-                fontWeight: '700'
-              }}>{t.itemSelector}</h2>
-              <button 
-                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#4a5568',
-                  color: '#f7fafc',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  minWidth: '80px',
-                  fontWeight: '600'
-                }}
-              >
-                {language === 'en' ? 'हिंदी' : 'English'}
-              </button>
-            </div>
-            
-            <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} placeholder={t.searchPlaceholder} />
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {filteredItems.map(item => (
-                <ItemCard
-                  key={item.item.en}
-                  item={item}
-                  selection={selections[item.item.en] || {}}
-                  onItemSelect={handleItemSelect}
-                  onUnitChange={handleUnitChange}
-                  onQuantityChange={handleQuantityChange}
-                  getQuantityOptions={getQuantityOptions}
-                  translations={t}
-                  language={language}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+  useEffect(() => {
+    const id = process.env.REACT_APP_SHEET_ID;
+    if (!id) return;
+    fetch(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv`)
+      .then(response => response.text())
+      .then(text => {
+        const rows = text.split('\n').slice(1).filter(row => row.trim()).map(row => {
+          const [en, hi, unit = 'pc'] = row.split(',').map(cell => cell.replace(/"/g, '').trim());
+          return { item: { en, hi: hi || en }, unit: [{ en: unit, hi: unitNames[unit] || 'पीस' }] };
+        });
+        if (rows.length) setItems(rows);
+      }).catch(() => {});
+  }, []);
 
-        {!showSelectedOnly && (
-          <SelectedItems 
-            selections={selections}
-            items={items}
-            onDownload={handleDownload}
-            onClearAll={handleClearAll}
-            onDeleteItem={handleDeleteItem}
-            onToggleView={toggleView}
-            showToggleButton={true}
-            translations={t}
-            language={language}
-            isEmailLoading={isEmailLoading}
-            onQuantityChange={handleQuantityChange}
-            getQuantityOptions={getQuantityOptions}
-          />
-        )}
-        
-        {showSelectedOnly && (
-          <div style={{ width: '100%' }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: '20px',
-              padding: '0 30px'
-            }}>
-              <button 
-                onClick={toggleView}
-                className="add-more-button"
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#4299e1',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}
-              >
-                {t.addMoreItems}
-              </button>
-              <button 
-                onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
-                className="language-toggle"
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: '#4a5568',
-                  color: '#f7fafc',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  minWidth: '80px',
-                  fontWeight: '600'
-                }}
-              >
-                {language === 'en' ? 'हिंदी' : 'English'}
-              </button>
-            </div>
-            <SelectedItems 
-              selections={selections}
-              items={items}
-              onDownload={handleDownload}
-              onClearAll={handleClearAll}
-              onDeleteItem={handleDeleteItem}
-              onToggleView={toggleView}
-              showToggleButton={false}
-              translations={t}
-              language={language}
-              isEmailLoading={isEmailLoading}
-              onQuantityChange={handleQuantityChange}
-              getQuantityOptions={getQuantityOptions}
-            />
-          </div>
-        )}
-        
-        <div className="mobile-navbar">
-          <button className="scroll-button" onClick={toggleView}>
-            {showSelectedOnly ? t.addMoreItems : t.viewSelectedItems}
-          </button>
-        </div>
-      </div>
-      
-      <Modal 
-        isOpen={modal.isOpen}
-        onClose={() => setModal({ ...modal, isOpen: false })}
-        title={modal.title}
-        message={modal.message}
-        type={modal.type}
-        translations={t}
-        onConfirm={modal.onConfirm}
-      />
+  useEffect(() => {
+    const handleRoute = () => setView(window.location.pathname === '/admin' ? 'admin' : 'shop');
+    window.addEventListener('popstate', handleRoute);
+    return () => window.removeEventListener('popstate', handleRoute);
+  }, []);
+
+  const select = (name, selected) => setSelections(current => {
+    if (!selected) { const next = { ...current }; delete next[name]; return next; }
+    const item = items.find(entry => entry.item.en === name);
+    const unit = item?.unit[0]?.en || 'pc';
+    const quantity = unit === 'g' ? 50 : unit.toLowerCase() === 'kg' ? 0.5 : 1;
+    return { ...current, [name]: { ...current[name], selected: true, unit, quantity } };
+  });
+  const changeUnit = (name, unit) => setSelections(current => ({ ...current, [name]: { ...current[name], selected: true, unit, quantity: current[name]?.quantity || (unit === 'g' ? 50 : unit.toLowerCase() === 'kg' ? 0.5 : 1) } }));
+  const changeQuantity = (name, quantity) => setSelections(current => ({ ...current, [name]: { ...current[name], selected: true, quantity } }));
+  const remove = name => setSelections(current => { const next = { ...current }; delete next[name]; return next; });
+  const closeModal = () => setModal(current => ({ ...current, isOpen: false }));
+  const download = () => setModal({ isOpen: true, title: t.emailConfirmTitle, message: t.emailConfirmMessage, type: 'confirm', onConfirm: async () => { closeModal(); setIsEmailLoading(true); try { await generatePDF(selections, items, language, setModal, t); } finally { setIsEmailLoading(false); } } });
+  const clear = () => setModal({ isOpen: true, title: t.clearAllConfirmTitle, message: t.clearAllConfirmMessage, type: 'confirm', onConfirm: () => { setSelections({}); setShowSelectedOnly(false); closeModal(); } });
+  const toggle = () => { setShowSelectedOnly(value => !value); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const filtered = filterItems(items, searchTerm, language);
+  const selectedCount = Object.values(selections).filter(item => item.selected).length;
+  const updateItems = async (nextItems, mutation) => {
+    await applySheetMutation(mutation);
+    setItems(nextItems);
+    setSelections(current => Object.fromEntries(Object.entries(current).filter(([name]) => nextItems.some(entry => entry.item.en === name))));
+  };
+  const goTo = path => { window.history.pushState({}, '', path); setView(path === '/admin' ? 'admin' : 'shop'); window.scrollTo({ top: 0 }); };
+  const connectSheet = async () => {
+    await connectGoogleSheets();
+    const sheetItems = await readItemsFromSheet();
+    setItems(sheetItems.map(entry => ({ ...entry, unit: [{ ...entry.unit[0], hi: unitNames[entry.unit[0].en] || 'पीस' }] })));
+    setSheetConnected(true);
+  };
+  const disconnectSheet = async () => { await disconnectGoogleSheets(); setSheetConnected(false); };
+
+  if (view === 'admin') return <div className="app-shell admin-shell"><AdminDashboard items={items} onItemsChange={updateItems} onBack={() => goTo('/')} sheetConnected={sheetConnected} sheetConfigured={isGoogleSheetsConfigured} onConnectSheet={connectSheet} onDisconnectSheet={disconnectSheet} /></div>;
+
+  return <div className={`app-shell ${showSelectedOnly ? 'selected-only-view' : ''}`}>
+    {isEmailLoading && <div className="loading-overlay"><div><div className="spinner" />{t.sending}</div></div>}
+    <nav className="top-navigation"><div className="top-brand"><span className="brand-mark" aria-hidden="true">⌂</span><strong>HomeList</strong></div><div className="top-actions"><span className="today-label">Your everyday shopping companion</span><button className="language-toggle" onClick={() => setLanguage(value => value === 'en' ? 'hi' : 'en')}>{language === 'en' ? 'हिंदी' : 'English'}</button></div></nav>
+    <div className="app-container">
+      <main className="main-panel">
+        <header className="app-header"><div className="header-copy"><p className="eyebrow">Everyday essentials</p><h1>{language === 'hi' ? 'आज आपको क्या चाहिए?' : 'What do you need today?'}</h1><p className="subtitle">{language === 'hi' ? 'अपनी सूची बनाने के लिए कोई आइटम चुनें।' : 'Choose an item to build your shopping list.'}</p></div><div className="selection-stat"><strong>{selectedCount}</strong><span>selected</span></div></header>
+        <section className="list-toolbar"><SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} placeholder={t.searchPlaceholder} /><p className="results-label"><strong>{filtered.length}</strong> items</p></section>
+        <div className="item-list">{filtered.map(item => <ItemCard key={item.item.en} item={item} selection={selections[item.item.en] || {}} onItemSelect={select} onUnitChange={changeUnit} onQuantityChange={changeQuantity} getQuantityOptions={getQuantityOptions} translations={t} language={language} />)}</div>
+      </main>
+      {showSelectedOnly && <div className="selected-view-header"><button onClick={toggle}>← {t.addMoreItems.replace(/^←\s*/, '')}</button></div>}
+      <SelectedItems selections={selections} items={items} onDownload={download} onClearAll={clear} onDeleteItem={remove} translations={t} language={language} isEmailLoading={isEmailLoading} onQuantityChange={changeQuantity} getQuantityOptions={getQuantityOptions} />
     </div>
-  );
+    {!showSelectedOnly && <div className="mobile-navbar"><button className="scroll-button" aria-label={`${language === 'hi' ? 'कार्ट खोलें' : 'Open cart'}, ${selectedCount} items`} onClick={toggle}><span aria-hidden="true">🛒</span> {language === 'hi' ? 'कार्ट' : 'Cart'} <strong>{selectedCount}</strong></button></div>}
+    <Modal isOpen={modal.isOpen} onClose={closeModal} title={modal.title} message={modal.message} type={modal.type} translations={t} onConfirm={modal.onConfirm} />
+  </div>;
 }
-
 export default App;
